@@ -91,20 +91,20 @@ In this example, we'll investigate the full table that we fetched above.
 # Print information on all the columns in the "full" table in the "hacker_news" dataset
 table.schema
 ```
-[SchemaField('title', 'STRING', 'NULLABLE', 'Story title', (), None),
- SchemaField('url', 'STRING', 'NULLABLE', 'Story url', (), None),
- SchemaField('text', 'STRING', 'NULLABLE', 'Story or comment text', (), None),
- SchemaField('dead', 'BOOLEAN', 'NULLABLE', 'Is dead?', (), None),
- SchemaField('by', 'STRING', 'NULLABLE', "The username of the item's author.", (), None),
- SchemaField('score', 'INTEGER', 'NULLABLE', 'Story score', (), None),
- SchemaField('time', 'INTEGER', 'NULLABLE', 'Unix time', (), None),
- SchemaField('timestamp', 'TIMESTAMP', 'NULLABLE', 'Timestamp for the unix time', (), None),
- SchemaField('type', 'STRING', 'NULLABLE', 'Type of details (comment, comment_ranking, poll, story, job, pollopt)', (), None),
- SchemaField('id', 'INTEGER', 'NULLABLE', "The item's unique id.", (), None),
- SchemaField('parent', 'INTEGER', 'NULLABLE', 'Parent comment ID', (), None),
- SchemaField('descendants', 'INTEGER', 'NULLABLE', 'Number of story or poll descendants', (), None),
- SchemaField('ranking', 'INTEGER', 'NULLABLE', 'Comment ranking', (), None),
- SchemaField('deleted', 'BOOLEAN', 'NULLABLE', 'Is deleted?', (), None)]
+> [SchemaField('title', 'STRING', 'NULLABLE', 'Story title', (), None),
+>  SchemaField('url', 'STRING', 'NULLABLE', 'Story url', (), None),
+>  SchemaField('text', 'STRING', 'NULLABLE', 'Story or comment text', (), None),
+>  SchemaField('dead', 'BOOLEAN', 'NULLABLE', 'Is dead?', (), None),
+>  SchemaField('by', 'STRING', 'NULLABLE', "The username of the item's author.", (), None),
+>  SchemaField('score', 'INTEGER', 'NULLABLE', 'Story score', (), None),
+>  SchemaField('time', 'INTEGER', 'NULLABLE', 'Unix time', (), None),
+>  SchemaField('timestamp', 'TIMESTAMP', 'NULLABLE', 'Timestamp for the unix time', (), None),
+>  SchemaField('type', 'STRING', 'NULLABLE', 'Type of details (comment, comment_ranking, poll, story, job, pollopt)', (), None),
+>  SchemaField('id', 'INTEGER', 'NULLABLE', "The item's unique id.", (), None),
+>  SchemaField('parent', 'INTEGER', 'NULLABLE', 'Parent comment ID', (), None),
+>  SchemaField('descendants', 'INTEGER', 'NULLABLE', 'Number of story or poll descendants', (), None),
+>  SchemaField('ranking', 'INTEGER', 'NULLABLE', 'Comment ranking', (), None),
+>  SchemaField('deleted', 'BOOLEAN', 'NULLABLE', 'Is deleted?', (), None)]
 
 Each SchemaField tells us about a specific column (which we also refer to as a field). In order, the information is:
 
@@ -129,10 +129,10 @@ client.list_rows(table, max_results=5).to_dataframe()
 ```
 > /opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:2: UserWarning: Cannot use bqstorage_client if max_results is set, reverting to fetching data with the tabledata.list endpoint.
 
-	title	url	text	dead	by	score	time	timestamp	type	id	parent	descendants	ranking	deleted
-0	None	None	I would rather just have wired earbuds, period...	None	zeveb	NaN	1591717736	2020-06-09 15:48:56+00:00	comment	23467666	23456782	NaN	NaN	None
-1	None	None	DNS?	None	nly	NaN	1572810465	2019-11-03 19:47:45+00:00	comment	21436112	21435130	NaN	NaN	None
-2	None	None	These benchmarks seem pretty good. Filterable...	None	mrkeen	NaN	1591717727	2020-06-09 15:48:47+00:00	comment	23467665	23467426	NaN	NaN	None
+ | title | url | text | dead | by | score | time | timestamp | type | id | parent | descendants | ranking | deleted | 
+ | 0 | None | None | I would rather just have wired earbuds, period... | None | zeveb | NaN | 1591717736 | 2020-06-09 15:48:56+00:00 | comment | 23467666 | 23456782 | NaN | NaN | None | 
+ | 1 | None | None | DNS? | None | nly | NaN | 1572810465 | 2019-11-03 19:47:45+00:00 | comment | 21436112 | 21435130 | NaN | NaN | None | 
+ | 2 | None | None | These benchmarks seem pretty good. Filterable... | None | mrkeen | NaN | 1591717727 | 2020-06-09 15:48:47+00:00 | comment | 23467665 | 23467426 | NaN | NaN | None | 
 3	None	None	Oh really?<p>* Excel alone uses 86.1MB of priv...	None	oceanswave	NaN	1462987532	2016-05-11 17:25:32+00:00	comment	11677248	11676886	NaN	NaN	None
 4	None	None	These systems are useless. Of the many flaws:...	None	nyxxie	NaN	1572810473	2019-11-03 19:47:53+00:00	comment	21436113	21435025	NaN	NaN	None
 
