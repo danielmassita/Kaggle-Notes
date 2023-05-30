@@ -136,7 +136,30 @@ client.list_rows(table, max_results=5).to_dataframe()
 > 3	None	None	Oh really?<p>* Excel alone uses 86.1MB of priv...	None	oceanswave	NaN	1462987532	2016-05-11 17:25:32+00:00	comment	11677248	11676886	NaN	NaN	None
 > 4	None	None	These systems are useless. Of the many flaws:...	None	nyxxie	NaN	1572810473	2019-11-03 19:47:53+00:00	comment	21436113	21435025	NaN	NaN	None
 
+The list_rows() method will also let us look at just the information in a specific column. If we want to see the first five entries in the by column, for example, we can do that!
+    
+```
+# Preview the first five entries in the "by" column of the "full" table
+client.list_rows(table, selected_fields=table.schema[:1], max_results=5).to_dataframe()
+```
+> /opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:2: UserWarning: Cannot use bqstorage_client if max_results is set, reverting to fetching data with the tabledata.list endpoint.
 
+> |   | title | 
+> | 0 |	None |
+> | 1 | None |
+> | 2 |	None |
+> | 3 | None |
+> | 4 | None |
+   
+    
+## Disclaimer
+Before we go into the coding exercise, a quick disclaimer for those who already know some SQL:
 
+Each Kaggle user can scan 5TB every 30 days for free. Once you hit that limit, you'll have to wait for it to reset.
 
+The commands you've seen so far won't demand a meaningful fraction of that limit. But some BiqQuery datasets are huge. So, if you already know SQL, wait to run SELECT queries until you've seen how to use your allotment effectively. If you are like most people reading this, you don't know how to write these queries yet, so you don't need to worry about this disclaimer. 
+    
+
+## Your turn
+Practice the commands you've seen to explore the structure of a dataset with crimes in the city of Chicago.
 
