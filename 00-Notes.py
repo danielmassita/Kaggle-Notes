@@ -887,9 +887,222 @@ transactions_by_date.set_index('trans_date').plot()
 
 # |----- Exercise 05 -----|
 
+# Get most recent checking code
+!pip install -U -t /kaggle/working/ git+https://github.com/Kaggle/learntools.git
+# Set up feedback system
+from learntools.core import binder
+binder.bind(globals())
+from learntools.sql.ex5 import *
+print("Setup Complete")
+
+"""
+Collecting git+https://github.com/Kaggle/learntools.git
+  Cloning https://github.com/Kaggle/learntools.git to /tmp/pip-req-build-9o9byrr4
+  Running command git clone --filter=blob:none --quiet https://github.com/Kaggle/learntools.git /tmp/pip-req-build-9o9byrr4
+  Resolved https://github.com/Kaggle/learntools.git to commit 69bc6daec79619690e758841dc2df35708d226c8
+  Preparing metadata (setup.py) ... done
+Building wheels for collected packages: learntools
+  Building wheel for learntools (setup.py) ... done
+  Created wheel for learntools: filename=learntools-0.3.4-py3-none-any.whl size=268981 sha256=45020ef010f98729325fd97f7839de418e49fc608f8fe48b42a23d38e276d8c4
+  Stored in directory: /tmp/pip-ephem-wheel-cache-fhk5yk9g/wheels/2f/6c/3c/aa9f50cfb5a862157cb4c7a5b34881828cf45404698255dced
+Successfully built learntools
+Installing collected packages: learntools
+Successfully installed learntools-0.3.4
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv class="ansi-yellow-fg">
+Setup Complete
+"""
+
+# You'll work with a dataset about taxi trips in the city of Chicago. Run the cell below to fetch the chicago_taxi_trips dataset.
+from google.cloud import bigquery
+
+# Create a "Client" object
+client = bigquery.Client()
+
+# Construct a reference to the "chicago_taxi_trips" dataset
+dataset_ref = client.dataset("chicago_taxi_trips", project="bigquery-public-data")
+
+# API request - fetch the dataset
+dataset = client.get_dataset(dataset_ref)
+
+# Your code here to find the table name
+tables = list(client.list_tables(dataset))
+for table in tables:
+    print(table.table_id) 
+"""
+taxi_trips
+"""
+num_tables = 1
+
+# Write the table name as a string below
+table_name = "taxi_trips"
+
+# Check your answer
+q_1.check()
+
+# Use the next code cell to peek at the top few rows of the data. Inspect the data and see if any issues with data quality are immediately obvious.
+
+# Your code here
+# Construct a reference to the "taxi_trips" table
+table_ref = dataset_ref.table("taxi_trips")
+
+# API request - fetch the table
+table = client.get_table(table_ref)
+
+# Preview the first five lines of the "taxi_trips" table
+client.list_rows(table, max_results=5).to_dataframe()
+
+"""
+	unique_key	taxi_id	trip_start_timestamp	trip_end_timestamp	trip_seconds	trip_miles	pickup_census_tract	dropoff_census_tract	pickup_community_area	dropoff_community_area	...	extras	trip_total	payment_type	company	pickup_latitude	pickup_longitude	pickup_location	dropoff_latitude	dropoff_longitude	dropoff_location
+0	976397e9c120d15bb6b222b5425071c7e1286f34	f9aee16b2de2973e98d52db66fb4a63a8dfd859ac95f9a...	2019-04-02 11:45:00+00:00	2019-04-02 11:45:00+00:00	581	1.2	NaN	NaN	NaN	NaN	...	0.0	7.00	Cash	Blue Diamond	NaN	NaN	None	NaN	NaN	None
+1	7b325318bd14a46641ab10ad5421d98ea7dc4987	298b6be4872d03f31ce998d0c8f78262bd07ce93a1622b...	2016-12-19 13:15:00+00:00	2016-12-19 13:30:00+00:00	624	4.3	NaN	NaN	NaN	NaN	...	0.0	11.40	Cash	303 Taxi	NaN	NaN	None	NaN	NaN	None
+2	b2d2eb79755bd3dd86b04c82c688abaeea8fefaa	fe9ca948ad83900c022e7cb67a5b0fe142b4ae7a17c01a...	2017-02-09 07:45:00+00:00	2017-02-09 08:00:00+00:00	322	2.4	NaN	NaN	NaN	NaN	...	0.0	7.00	Cash	303 Taxi	NaN	NaN	None	NaN	NaN	None
+3	0de2c16744d3efa6a35bbc3722a0e733f9694bb4	be050281eb37a24f3bc9c0ed8f13541d2a9fabef8a2319...	2016-10-15 10:15:00+00:00	2016-10-15 10:15:00+00:00	13	0.0	NaN	NaN	NaN	NaN	...	0.0	7.01	Credit Card	303 Taxi	NaN	NaN	None	NaN	NaN	None
+4	8b348926c0a2aea502b66adc78fbf751720b5900	412cc78b4c891db2d615b68da0ec1292ca399d6d8e51dc...	2016-11-28 17:15:00+00:00	2016-11-28 17:15:00+00:00	612	2.7	NaN	NaN	NaN	NaN	...	0.0	11.00	Credit Card	303 Taxi	NaN	NaN	None	NaN	NaN	None
+5 rows × 23 columns
+"""
+# Some location fields have values of None or NaN. That is a problem if we want to use those fields.
+
+# Q3. Determine when this data is from
+# If the data is sufficiently old, we might be careful before assuming the data is still relevant to traffic patterns today. Write a query that counts the number of trips in each year.
+# Your results should have two columns:
+#	year - the year of the trips
+#	num_trips - the number of trips in that year
+
+# Your code goes here
+rides_per_year_query = """
+                       SELECT EXTRACT(YEAR FROM trip_start_timestamp) AS year, 
+                              COUNT(1) AS num_trips
+                       FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+                       GROUP BY year
+                       ORDER BY year
+                       """
+
+# Set up the query (cancel the query if it would use too much of your quota)
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed=10**10)
+
+# Your code goes here
+rides_per_year_query_job = client.query(rides_per_year_query, job_config=safe_config)
+
+# API request - run the query, and return a pandas DataFrame
+rides_per_year_result = rides_per_year_query_job.to_dataframe()
+
+# View results
+print(rides_per_year_result)
+
+# Check your answer
+q_3.check()
+
+"""
+     year  num_trips
+0     NaN          1
+1  2013.0       5906
+2  2014.0    2552428
+3  2015.0    7661200
+4  2016.0    5476726
+5  2017.0     472579
+6  2018.0      26800
+7  2019.0       9273
+8  2022.0       5330
+"""
+
+# Q4. Dive slightly deeper
+# You'd like to take a closer look at rides from 2016. Copy the query you used above in rides_per_year_query into the cell below for rides_per_month_query. Then modify it in two ways:
+# Use a WHERE clause to limit the query to data from 2016.
+# Modify the query to extract the month rather than the year.
+
+# Your code goes here
+rides_per_month_query = """
+	SELECT EXTRACT(MONTH FROM trip_start_timestamp) AS month, COUNT(1) AS num_trips
+	FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+	WHERE EXTRACT(YEAR FROM trip_start_timestamp) = 2016
+	GROUP BY month
+	ORDER BY month
+""" 
+
+# Set up the query
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed=10**9)
+# Your code goes here
+rides_per_month_query_job = client.query(rides_per_month_query, job_config=safe_config)
+
+# API request - run the query, and return a pandas DataFrame
+# Your code goes here
+rides_per_month_result = rides_per_month_query_job.to_dataframe()
+
+# View results
+print(rides_per_month_result)
+
+# Check your answer
+q_4.check()
+
+"""
+    month  num_trips
+0       1     496237
+1       2     509295
+2       3     564636
+3       4     559003
+4       5     559789
+5       6     259785
+6       7      29063
+7       8     715312
+8       9      70144
+9      10      44572
+10     11     760689
+11     12     908201
+"""
+
+# Q5. It's time to step up the sophistication of your queries. Write a query that shows, for each hour of the day in the dataset, the corresponding number of trips and average speed.
+# Your results should have three columns:
+#	hour_of_day - sort by this column, which holds the result of extracting the hour from trip_start_timestamp.
+#	num_trips - the count of the total number of trips in each hour of the day (e.g. how many trips were started between 6AM and 7AM, independent of which day it occurred on).
+#	avg_mph - the average speed, measured in miles per hour, for trips that started in that hour of the day. Average speed in miles per hour is calculated as 3600 * SUM(trip_miles) / SUM(trip_seconds). (The value 3600 is used to convert from seconds to hours.)
+# Restrict your query to data meeting the following criteria:
+#	a trip_start_timestamp > 2016-01-01 and < 2016-04-01
+#	trip_seconds > 0 and trip_miles > 0
+# You will use a common table expression (CTE) to select just the relevant rides. Because this dataset is very big, this CTE should select only the columns you'll need to create the final output (though you won't actually create those in the CTE -- instead you'll create those in the later SELECT statement below the CTE).
+
+# Your code goes here
+speeds_query = """
+               WITH RelevantRides AS
+               (
+                   SELECT EXTRACT(HOUR FROM trip_start_timestamp) AS hour_of_day, 
+                          trip_miles, 
+                          trip_seconds
+                   FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+                   WHERE trip_start_timestamp > '2016-01-01' AND 
+                         trip_start_timestamp < '2016-04-01' AND 
+                         trip_seconds > 0 AND 
+                         trip_miles > 0
+               )
+               SELECT hour_of_day, 
+                      COUNT(1) AS num_trips, 
+                      3600 * SUM(trip_miles) / SUM(trip_seconds) AS avg_mph
+               FROM RelevantRides
+               GROUP BY hour_of_day
+               ORDER BY hour_of_day
+               """
+
+# Set up the query (cancel the query if it would use too much of 
+# your quota)
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed=10**10)
+speeds_query_job = client.query(speeds_query, job_config=safe_config)
+
+# API request - run the query, and return a pandas DataFrame
+speeds_result = speeds_query_job.to_dataframe()
+
+# View results
+print(speeds_result)
+
+# Check your answer
+q_5.check()
+
+
+# |----- Theory 06 -----|
 
 
 
+
+
+# |----- Exercise 06 -----|
 
 
 
