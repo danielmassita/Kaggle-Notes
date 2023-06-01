@@ -694,6 +694,151 @@ accidents_by_day
 
 # |----- Exercise 04 -----|
 
+# Set up feedback system
+from learntools.core import binder
+binder.bind(globals())
+from learntools.sql.ex4 import *
+print("Setup Complete")
+
+# The World Bank has made tons of interesting education data available through BigQuery. Run the following cell to see the first few rows of the international_education table from the world_bank_intl_education dataset.
+from google.cloud import bigquery
+
+# Create a "Client" object
+client = bigquery.Client()
+
+# Construct a reference to the "world_bank_intl_education" dataset
+dataset_ref = client.dataset("world_bank_intl_education", project="bigquery-public-data")
+
+# API request - fetch the dataset
+dataset = client.get_dataset(dataset_ref)
+
+# Construct a reference to the "international_education" table
+table_ref = dataset_ref.table("international_education")
+
+# API request - fetch the table
+table = client.get_table(table_ref)
+
+# Preview the first five lines of the "international_education" table
+client.list_rows(table, max_results=5).to_dataframe()
+
+"""
+	country_name	country_code	indicator_name	indicator_code	value	year
+0	Chad	TCD	Enrolment in lower secondary education, both s...	UIS.E.2	321921.0	2012
+1	Chad	TCD	Enrolment in upper secondary education, both s...	UIS.E.3	68809.0	2006
+2	Chad	TCD	Enrolment in upper secondary education, both s...	UIS.E.3	30551.0	1999
+3	Chad	TCD	Enrolment in upper secondary education, both s...	UIS.E.3	79784.0	2007
+4	Chad	TCD	Repeaters in primary education, all grades, bo...	UIS.R.1	282699.0	2006
+"""
+
+# One interesting indicator code is SE.XPD.TOTL.GD.ZS, which corresponds to "Government expenditure on education as % of GDP (%)".
+# Which countries spend the largest fraction of GDP on education?
+# To answer this question, consider only the rows in the dataset corresponding to indicator code SE.XPD.TOTL.GD.ZS, and write a query that returns the average value in the value column for each country in the dataset between the years 2010-2017 (including 2010 and 2017 in the average).
+# Requirements:
+#	Your results should have the country name rather than the country code. You will have one row for each country.
+#	The aggregate function for average is AVG(). Use the name avg_ed_spending_pct for the column created by this aggregation.
+#	Order the results so the countries that spend the largest fraction of GDP on education show up first.
+
+# Your code goes here
+country_spend_pct_query = """
+	SELECT country_name, AVG(value) AS avg_ed_spending_pct
+	FROM `bigquery-public-data.world_bank_intl_education.international_education`
+	WHERE indicator_code = 'SE.XPD.TOTL.GD.ZS' and year >= 2010 and year <= 2017
+	GROUP BY country_name
+	ORDER BY avg_ed_spending_pct DESC
+"""
+
+# Set up the query (cancel the query if it would use too much of 
+# your quota, with the limit set to 1 GB)
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed=10**10)
+country_spend_pct_query_job = client.query(country_spend_pct_query, job_config=safe_config)
+
+# API request - run the query, and return a pandas DataFrame
+country_spending_results = country_spend_pct_query_job.to_dataframe()
+
+# View top few rows of results
+print(country_spending_results.head())
+
+# Check your answer
+q_1.check()
+
+"""
+            country_name  avg_ed_spending_pct
+0                   Cuba            12.837270
+1  Micronesia, Fed. Sts.            12.467750
+2        Solomon Islands            10.001080
+3                Moldova             8.372153
+4                Namibia             8.349610
+"""
+
+# There are 1000s of codes in the dataset, so it would be time consuming to review them all. But many codes are available for only a few countries. When browsing the options for different codes, you might restrict yourself to codes that are reported by many countries.
+# Write a query below that selects the indicator code and indicator name for all codes with at least 175 rows in the year 2016.
+# Requirements:
+#	You should have one row for each indicator code.
+#	The columns in your results should be called indicator_code, indicator_name, and num_rows.
+#	Only select codes with 175 or more rows in the raw database (exactly 175 rows would be included).
+#	To get both the indicator_code and indicator_name in your resulting DataFrame, you need to include both in your SELECT statement (in addition to a COUNT() aggregation). This requires you to include both in your GROUP BY clause.
+#	Order from results most frequent to least frequent.
+
+# Your code goes here
+code_count_query = """
+	SELECT indicator_code, indicator_name, COUNT(1) AS num_rows
+	FROM `bigquery-public-data.world_bank_intl_education.international_education`
+	WHERE year = 2016
+	GROUP BY indicator_name, indicator_code
+	HAVING COUNT(1) >= 175
+	ORDER BY COUNT(1) DESC
+"""
+
+# Set up the query
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed=10**10)
+code_count_query_job = client.query(code_count_query, job_config=safe_config)
+
+# API request - run the query, and return a pandas DataFrame
+code_count_results = code_count_query_job.to_dataframe()
+
+# View top few rows of results
+print(code_count_results.head())
+
+# Check your answer
+q_2.check()
+
+"""
+      indicator_code                       indicator_name  num_rows
+0        SP.POP.TOTL                    Population, total       232
+1        SP.POP.GROW         Population growth (annual %)       232
+2     IT.NET.USER.P2      Internet users (per 100 people)       223
+3  SP.POP.TOTL.FE.ZS      Population, female (% of total)       213
+4        SH.DYN.MORT  Mortality rate, under-5 (per 1,000)       213
+"""
+
+
+# |----- Theory 05 -----|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
