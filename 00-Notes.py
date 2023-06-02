@@ -1097,10 +1097,92 @@ q_5.check()
 
 
 # |----- Theory 06 -----|
+from google.cloud import bigquery
 
+# Create a "Client" object
+client = bigquery.Client()
 
+# Construct a reference to the "github_repos" dataset
+dataset_ref = client.dataset("github_repos", project="bigquery-public-data")
+# API request - fetch the dataset
+dataset = client.get_dataset(dataset_ref)
 
+# Construct a reference to the "licenses" table
+licenses_ref = dataset_ref.table("licenses")
+# API request - fetch the table
+licenses_table = client.get_table(licenses_ref)
 
+# Preview the first five lines of the "licenses" table
+client.list_rows(licenses_table, max_results=5).to_dataframe()
+
+"""
+	repo_name	license
+0	autarch/Dist-Zilla-Plugin-Test-TidyAll	artistic-2.0
+1	thundergnat/Prime-Factor	artistic-2.0
+2	kusha-b-k/Turabian_Engin_Fan	artistic-2.0
+3	onlinepremiumoutlet/onlinepremiumoutlet.github.io	artistic-2.0
+4	huangyuanlove/LiaoBa_Service	artistic-2.0
+"""
+
+# The second table is the sample_files table, which provides, among other information, the GitHub repo that each file belongs to (in the repo_name column). The first several rows of this table are printed below.
+
+# Construct a reference to the "sample_files" table
+files_ref = dataset_ref.table("sample_files")
+# API request - fetch the table
+files_table = client.get_table(files_ref)
+
+# Preview the first five lines of the "sample_files" table
+client.list_rows(files_table, max_results=5).to_dataframe()
+
+"""
+	repo_name	ref	path	mode	id	symlink_target
+0	EOL/eol	refs/heads/master	generate/vendor/railties	40960	0338c33fb3fda57db9e812ac7de969317cad4959	/usr/share/rails-ruby1.8/railties
+1	np/ling	refs/heads/master	tests/success/merger_seq_inferred.t/merger_seq...	40960	dd4bb3d5ecabe5044d3fa5a36e0a9bf7ca878209	../../../fixtures/all/merger_seq_inferred.ll
+2	np/ling	refs/heads/master	fixtures/sequence/lettype.ll	40960	8fdf536def2633116d65b92b3b9257bcf06e3e45	../all/lettype.ll
+3	np/ling	refs/heads/master	fixtures/failure/wrong_order_seq3.ll	40960	c2509ae1196c4bb79d7e60a3d679488ca4a753e9	../all/wrong_order_seq3.ll
+4	np/ling	refs/heads/master	issues/sequence/keep.t	40960	5721de3488fb32745dfc11ec482e5dd0331fecaf	../keep.t
+"""
+
+# Next, we write a query that uses information in both tables to determine how many files are released in each license.
+
+# Query to determine the number of files per license, sorted by number of files
+query = """
+	SELECT L.license, COUNT(1) AS number_of_files
+	FROM `bigquery-public-data.github_repos.sample_files` AS sf
+	INNER JOIN `bigquery-public-data.github_repos.licenses` AS L
+		ON sf.repo_name = L.repo_name
+	GROUP BY L.license
+	ORDER BY number_of_files DESC
+	"""
+
+# Set up the query (cancel the query if it would use too much of your quota, with the limit set to 10 GB)
+safe_config = biquery.QueryJobConfig(maximum_bytes_billed=10**10)
+query_job = client.query(query, job_config=safe_config)
+
+# API request - run the query, and convert the results to a pandas DataFrame
+file_count_by_license = query_job.to_dataframe()
+
+# Print the DataFrame
+file_count_by_license
+
+"""
+	license	number_of_files
+0	mit	20560894
+1	gpl-2.0	16608922
+2	apache-2.0	7201141
+3	gpl-3.0	5107676
+4	bsd-3-clause	3465437
+5	agpl-3.0	1372100
+6	lgpl-2.1	799664
+7	bsd-2-clause	692357
+8	lgpl-3.0	582277
+9	mpl-2.0	457000
+10	cc0-1.0	449149
+11	epl-1.0	322255
+12	unlicense	208602
+13	artistic-2.0	147391
+14	isc	118332
+"""
 
 # |----- Exercise 06 -----|
 
