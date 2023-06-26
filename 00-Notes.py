@@ -1795,18 +1795,72 @@ Correct
 q_2.hint()
 q_2.solution()
 
+# 3) Initial questions and answers, Part 2¶
+# Now you'll address a more realistic (and complex!) scenario. To answer this question, you'll need to pull information from three different tables! This syntax very similar to the case when we have to join only two tables. For instance, consider the three tables below.
+# We can use two different JOINs to link together information from all three tables, in a single query.
+# With this in mind, say you're interested in understanding users who joined the site in January 2019. You want to track their activity on the site: when did they post their first questions and answers, if ever?
+# Write a query that returns the following columns:
+#	id - the IDs of all users who created Stack Overflow accounts in January 2019 (January 1, 2019, to January 31, 2019, inclusive)
+# 	q_creation_date - the first time the user posted a question on the site; if the user has never posted a question, the value should be null
+# 	a_creation_date - the first time the user posted a question on the site; if the user has never posted a question, the value should be null
+# Note that questions and answers posted after January 31, 2019, should still be included in the results. And, all users who joined the site in January 2019 should be included (even if they have never posted a question or provided an answer).
+
+# The query from the previous question should be a nice starting point to answering this question! You'll need to use the posts_answers and posts_questions tables. You'll also need to use the users table from the Stack Overflow dataset. The relevant columns from the users table are id (the ID of each user) and creation_date (when the user joined the Stack Overflow site, in DATETIME format).
+
+# Solution:
+three_tables_query = """
+SELECT u.id AS id,
+    MIN(q.creation_date) AS q_creation_date,
+    MIN(a.creation_date) AS a_creation_date,
+FROM `bigquery-public-data.stackoverflow.users` AS u
+    LEFT JOIN `bigquery-public-data.stackoverflow.posts_answers` AS a
+        ON u.id = a.owner_user_id
+    LEFT JOIN `bigquery-public-data.stackoverflow.posts_questions` AS q
+        ON q.owner_user_id = u.id
+WHERE u.creation_date >= '2019-01-01' AND u.creation_date < '2019-02-01'
+GROUP BY id
 """
-Solution:
-q_and_a_query = """
-                SELECT q.owner_user_id AS owner_user_id,
-                    MIN(q.creation_date) AS q_creation_date,
-                    MIN(a.creation_date) AS a_creation_date
-                FROM `bigquery-public-data.stackoverflow.posts_questions` AS q
-                    FULL JOIN `bigquery-public-data.stackoverflow.posts_answers` AS a
-                ON q.owner_user_id = a.owner_user_id 
-                WHERE q.creation_date >= '2019-01-01' AND q.creation_date < '2019-02-01' 
-                    AND a.creation_date >= '2019-01-01' AND a.creation_date < '2019-02-01'
-                GROUP BY owner_user_id
-                """
+
+# Check your answer
+q_3.check()
+
+"""
+	id	q_creation_date	a_creation_date
+0	10874486	2019-01-15 13:33:04.047000+00:00	NaT
+1	10862614	NaT	NaT
+2	10987357	NaT	NaT
+3	10876215	NaT	NaT
+4	10879761	NaT	NaT
+"""
+
+
+
+# 4) How many distinct users posted on January 1, 2019?
+# In the code cell below, write a query that returns a table with a single column:
+#	owner_user_id - the IDs of all users who posted at least one question or answer on January 1, 2019. Each user ID should appear at most once.
+# In the posts_questions (and posts_answers) tables, you can get the ID of the original poster from the owner_user_id column. Likewise, the date of the original posting can be found in the creation_date column.
+# In order for your answer to be marked correct, your query must use a UNION.
+
+# Your code here
+all_users_query = """
+                  SELECT q.owner_user_id 
+                  FROM `bigquery-public-data.stackoverflow.posts_questions` AS q
+                  WHERE EXTRACT(DATE FROM q.creation_date) = '2019-01-01'
+                  UNION DISTINCT
+                  SELECT a.owner_user_id
+                  FROM `bigquery-public-data.stackoverflow.posts_answers` AS a
+                  WHERE EXTRACT(DATE FROM a.creation_date) = '2019-01-01'
+                  """
+
+# Check your answer
+q_4.check()
+"""
+	owner_user_id
+0	4934409.0
+1	4984963.0
+2	10443903.0
+3	10855350.0
+4	10854542.0
+Correct
 """
 
