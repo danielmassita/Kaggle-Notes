@@ -1610,3 +1610,203 @@ len(union_result)
 
 
 # |----- Exercise 07 -----|
+
+# Set up feedback system
+from learntools.core import binder
+binder.bind(globals())
+from learntools.sql_advanced.ex1 import *
+print("Setup Complete")
+"""Setup Complete"""
+
+# from google.cloud import bigquery
+from google.cloud import bigquery
+
+# Create a "Client" object
+client = bigquery.Client()
+
+# Construct a reference to the "stackoverflow" dataset
+dataset_ref = client.dataset("stackoverflow", project="bigquery-public-data")
+
+# API request - fetch the dataset
+dataset = client.get_dataset(dataset_ref)
+
+# Construct a reference to the "posts_questions" table
+table_ref = dataset_ref.table("posts_questions")
+
+# API request - fetch the table
+table = client.get_table(table_ref)
+
+# Preview the first five lines of the table
+client.list_rows(table, max_results=5).to_dataframe()
+
+"""
+	id	title	body	accepted_answer_id	answer_count	comment_count	community_owned_date	creation_date	favorite_count	last_activity_date	last_edit_date	last_editor_display_name	last_editor_user_id	owner_display_name	owner_user_id	parent_id	post_type_id	score	tags	view_count
+0	320268	Html.ActionLink doesn’t render # properly	<p>When using Html.ActionLink passing a string...	NaN	0	0	NaT	2008-11-26 10:42:37.477000+00:00	0	2009-02-06 20:13:54.370000+00:00	NaT	None	NaN	Paulo	NaN	None	1	0	asp.net-mvc	390
+1	324003	Primitive recursion	<p>how will i define the function 'simplify' ...	NaN	0	0	NaT	2008-11-27 15:12:37.497000+00:00	0	2012-09-25 19:54:40.597000+00:00	2012-09-25 19:54:40.597000+00:00	Marcin	1288.0	None	41000.0	None	1	0	haskell|lambda|functional-programming|lambda-c...	497
+2	390605	While vs. Do While	<p>I've seen both the blocks of code in use se...	390608.0	0	0	NaT	2008-12-24 01:49:54.230000+00:00	2	2008-12-24 03:08:55.897000+00:00	NaT	None	NaN	Unkwntech	115.0	None	1	0	language-agnostic|loops	11262
+3	413246	Protect ASP.NET Source code	<p>Im currently doing some research in how to ...	NaN	0	0	NaT	2009-01-05 14:23:51.040000+00:00	0	2009-03-24 21:30:22.370000+00:00	2009-01-05 14:42:28.257000+00:00	Tom Anderson	13502.0	Velnias	NaN	None	1	0	asp.net|deployment|obfuscation	4823
+4	454921	Difference between "int[] myArray" and "int my...	<blockquote>\n <p><strong>Possible Duplicate:...	454928.0	0	0	NaT	2009-01-18 10:22:52.177000+00:00	0	2009-01-18 10:30:50.930000+00:00	2017-05-23 11:49:26.567000+00:00	None	-1.0	Evan Fosmark	49701.0	None	1	0	java|arrays	798
+
+"""
+
+# We also take a look at the posts_answers table.
+
+# Construct a reference to the "posts_answers" table
+table_ref = dataset_ref.table("posts_answers")
+
+# API request - fetch the table
+table = client.get_table(table_ref)
+
+# Preview the first five lines of the table
+client.list_rows(table, max_results=5).to_dataframe()
+
+"""
+	id	title	body	accepted_answer_id	answer_count	comment_count	community_owned_date	creation_date	favorite_count	last_activity_date	last_edit_date	last_editor_display_name	last_editor_user_id	owner_display_name	owner_user_id	parent_id	post_type_id	score	tags	view_count
+0	18	None	<p>For a table like this:</p>\n\n<pre><code>CR...	None	None	2	NaT	2008-08-01 05:12:44.193000+00:00	None	2016-06-02 05:56:26.060000+00:00	2016-06-02 05:56:26.060000+00:00	Jeff Atwood	126039	phpguy	NaN	17	2	59	None	None
+1	165	None	<p>You can use a <a href="http://sharpdevelop....	None	None	0	NaT	2008-08-01 18:04:25.023000+00:00	None	2019-04-06 14:03:51.080000+00:00	2019-04-06 14:03:51.080000+00:00	None	1721793	user2189331	NaN	145	2	10	None	None
+2	1028	None	<p>The VB code looks something like this:</p>\...	None	None	0	NaT	2008-08-04 04:58:40.300000+00:00	None	2013-02-07 13:22:14.680000+00:00	2013-02-07 13:22:14.680000+00:00	None	395659	user2189331	NaN	947	2	8	None	None
+3	1073	None	<p>My first choice would be a dedicated heap t...	None	None	0	NaT	2008-08-04 07:51:02.997000+00:00	None	2015-09-01 17:32:32.120000+00:00	2015-09-01 17:32:32.120000+00:00	None	45459	user2189331	NaN	1069	2	29	None	None
+4	1260	None	<p>I found the answer. all you have to do is a...	None	None	0	NaT	2008-08-04 14:06:02.863000+00:00	None	2016-12-20 08:38:48.867000+00:00	2016-12-20 08:38:48.867000+00:00	None	1221571	Jin	NaN	1229	2	1	None	None
+"""
+
+# You will work with both of these tables to answer the questions below.
+
+# Exercises
+# 1) How long does it take for questions to receive answers?
+# You're interested in exploring the data to have a better understanding of how long it generally takes for questions to receive answers. Armed with this knowledge, you plan to use this information to better design the order in which questions are presented to Stack Overflow users.
+# With this goal in mind, you write the query below, which focuses on questions asked in January 2018. It returns a table with two columns:
+#	q_id - the ID of the question
+#	time_to_answer - how long it took (in seconds) for the question to receive an answer
+# Run the query below (without changes), and take a look at the output.
+
+first_query = """
+              SELECT q.id AS q_id,
+                  MIN(TIMESTAMP_DIFF(a.creation_date, q.creation_date, SECOND)) as time_to_answer
+              FROM `bigquery-public-data.stackoverflow.posts_questions` AS q
+                  INNER JOIN `bigquery-public-data.stackoverflow.posts_answers` AS a
+              ON q.id = a.parent_id
+              WHERE q.creation_date >= '2018-01-01' and q.creation_date < '2018-02-01'
+              GROUP BY q_id
+              ORDER BY time_to_answer
+              """
+
+first_result = client.query(first_query).result().to_dataframe()
+print("Percentage of answered questions: %s%%" % \
+      (sum(first_result["time_to_answer"].notnull()) / len(first_result) * 100))
+print("Number of questions:", len(first_result))
+first_result.head()
+
+"""
+Percentage of answered questions: 100.0%
+Number of questions: 134719
+q_id	time_to_answer
+0	48382183	-132444692
+1	48174391	0
+2	48375126	0
+3	48092100	0
+4	48102324	0
+"""
+
+# You're surprised at the results and strongly suspect that something is wrong with your query. In particular,
+
+# According to the query, 100% of the questions from January 2018 received an answer. But, you know that ~80% of the questions on the site usually receive an answer.
+# The total number of questions is surprisingly low. You expected to see at least 150,000 questions represented in the table.
+# Given these observations, you think that the type of JOIN you have chosen has inadvertently excluded unanswered questions. Using the code cell below, can you figure out what type of JOIN to use to fix the problem so that the table includes unanswered questions?
+
+# Note: You need only amend the type of JOIN (i.e., INNER, LEFT, RIGHT, or FULL) to answer the question successfully.
+
+# Your code here
+correct_query = """
+              SELECT q.id AS q_id,
+                  MIN(TIMESTAMP_DIFF(a.creation_date, q.creation_date, SECOND)) as time_to_answer
+              FROM `bigquery-public-data.stackoverflow.posts_questions` AS q
+                  LEFT JOIN `bigquery-public-data.stackoverflow.posts_answers` AS a
+              ON q.id = a.parent_id
+              WHERE q.creation_date >= '2018-01-01' and q.creation_date < '2018-02-01'
+              GROUP BY q_id
+              ORDER BY time_to_answer
+              """
+
+# Check your answer
+q_1.check()
+
+# Run the query, and return a pandas DataFrame
+correct_result = client.query(correct_query).result().to_dataframe()
+print("Percentage of answered questions: %s%%" % \
+      (sum(correct_result["time_to_answer"].notnull()) / len(correct_result) * 100))
+print("Number of questions:", len(correct_result))
+
+"""
+
+q_id	time_to_answer
+0	48534629	NaN
+1	48483836	NaN
+2	48530405	NaN
+3	48446591	NaN
+4	48342185	NaN
+"""
+# Correct
+# Percentage of answered questions: 83.3368387192557%
+# Number of questions: 161656
+
+
+
+# 2) Initial questions and answers, Part 1
+# You're interested in understanding the initial experiences that users typically have with the Stack Overflow website. Is it more common for users to first ask questions or provide answers? After signing up, how long does it take for users to first interact with the website? To explore this further, you draft the (partial) query in the code cell below.
+
+# The query returns a table with three columns:
+
+#	owner_user_id - the user ID
+#	q_creation_date - the first time the user asked a question
+#	a_creation_date - the first time the user contributed an answer
+
+# You want to keep track of users who have asked questions, but have yet to provide answers. And, your table should also include users who have answered questions, but have yet to pose their own questions.
+# With this in mind, please fill in the appropriate JOIN (i.e., INNER, LEFT, RIGHT, or FULL) to return the correct information.
+# Note: You need only fill in the appropriate JOIN. All other parts of the query should be left as-is. (You also don't need to write any additional code to run the query, since the check() method will take care of this for you.)
+# To avoid returning too much data, we'll restrict our attention to questions and answers posed in January 2019. We'll amend the timeframe in Part 2 of this question to be more realistic!
+
+# Your code here
+q_and_a_query = """
+                SELECT q.owner_user_id AS owner_user_id,
+                    MIN(q.creation_date) AS q_creation_date,
+                    MIN(a.creation_date) AS a_creation_date
+                FROM `bigquery-public-data.stackoverflow.posts_questions` AS q
+                    FULL JOIN `bigquery-public-data.stackoverflow.posts_answers` AS a 
+                ON q.owner_user_id = a.owner_user_id 
+                WHERE q.creation_date >= '2019-01-01' AND q.creation_date < '2019-02-01' 
+                    AND a.creation_date >= '2019-01-01' AND a.creation_date < '2019-02-01'
+                GROUP BY owner_user_id
+                """
+
+# Check your answer
+q_2.check()
+
+"""
+	owner_user_id	q_creation_date	a_creation_date
+0	4868132	2019-01-03 14:42:42.477000+00:00	2019-01-06 12:19:33.453000+00:00
+1	2430915	2019-01-07 01:21:25.160000+00:00	2019-01-18 05:22:23.530000+00:00
+2	10848105	2019-01-04 02:02:15.210000+00:00	2019-01-06 15:15:52.123000+00:00
+3	7692562	2019-01-08 15:15:55.523000+00:00	2019-01-14 16:40:36.240000+00:00
+4	5897602	2019-01-03 13:24:49.870000+00:00	2019-01-02 18:47:19.087000+00:00
+Correct
+"""
+
+# Lines below will give you a hint or solution code
+q_2.hint()
+q_2.solution()
+
+"""
+Solution:
+q_and_a_query = """
+                SELECT q.owner_user_id AS owner_user_id,
+                    MIN(q.creation_date) AS q_creation_date,
+                    MIN(a.creation_date) AS a_creation_date
+                FROM `bigquery-public-data.stackoverflow.posts_questions` AS q
+                    FULL JOIN `bigquery-public-data.stackoverflow.posts_answers` AS a
+                ON q.owner_user_id = a.owner_user_id 
+                WHERE q.creation_date >= '2019-01-01' AND q.creation_date < '2019-02-01' 
+                    AND a.creation_date >= '2019-01-01' AND a.creation_date < '2019-02-01'
+                GROUP BY owner_user_id
+                """
+"""
+
