@@ -1962,3 +1962,171 @@ start_end_result.head()
 4	581	12:56:00	77	73	60	73
 """
 
+
+
+
+
+# |----- Exercise 08 -----| 
+# Get most recent checking code
+!pip install -U -t /kaggle/working/ git+https://github.com/Kaggle/learntools.git
+# Set up feedback system
+from learntools.core import binder
+binder.bind(globals())
+from learntools.sql_advanced.ex2 import *
+print("Setup Complete")
+"""
+Collecting git+https://github.com/Kaggle/learntools.git
+  Cloning https://github.com/Kaggle/learntools.git to /tmp/pip-req-build-ae_f8_w_
+  Running command git clone --filter=blob:none --quiet https://github.com/Kaggle/learntools.git /tmp/pip-req-build-ae_f8_w_
+  Resolved https://github.com/Kaggle/learntools.git to commit 3f8b29f847615177ba31b43aedefbb988c1c5fc1
+  Preparing metadata (setup.py) ... done
+Building wheels for collected packages: learntools
+  Building wheel for learntools (setup.py) ... done
+  Created wheel for learntools: filename=learntools-0.3.4-py3-none-any.whl size=268981 sha256=21b311fea506fa62198d98d69b6c65f410e5cd85b52e0b25b773f24c5215080b
+  Stored in directory: /tmp/pip-ephem-wheel-cache-qwglapv5/wheels/2f/6c/3c/aa9f50cfb5a862157cb4c7a5b34881828cf45404698255dced
+Successfully built learntools
+Installing collected packages: learntools
+Successfully installed learntools-0.3.4
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv class="ansi-yellow-fg">
+Setup Complete
+"""
+
+from google.cloud import bigquery
+
+# Create a "Client" object
+client = bigquery.Client()
+
+# Construct a reference to the "chicago_taxi_trips" dataset
+dataset_ref = client.dataset("chicago_taxi_trips", project="bigquery-public-data")
+
+# API request - fetch the dataset
+dataset = client.get_dataset(dataset_ref)
+
+# Construct a reference to the "taxi_trips" table
+table_ref = dataset_ref.table("taxi_trips")
+
+# API request - fetch the table
+table = client.get_table(table_ref)
+
+# Preview the first five lines of the table
+client.list_rows(table, max_results=5).to_dataframe()
+
+"""
+unique_key	taxi_id	trip_start_timestamp	trip_end_timestamp	trip_seconds	trip_miles	pickup_census_tract	dropoff_census_tract	pickup_community_area	dropoff_community_area	...	extras	trip_total	payment_type	company	pickup_latitude	pickup_longitude	pickup_location	dropoff_latitude	dropoff_longitude	dropoff_location
+0	a116ecd87f2ad76f9d68785b28800e61dbd8618b	83cdef885e81832f503b6929e7fe568508653c46268f84...	2019-04-13 00:00:00+00:00	2019-04-13 00:00:00+00:00	480	1.4	NaN	NaN	NaN	NaN	...	0.0	7.50	Cash	Taxi Affiliation Services	NaN	NaN	None	NaN	NaN	None
+1	7a0a1d74891209f6bb518f436bab4f2f0c1c89f3	805d7d7ca4bbf72ee21e530f8d16935d3d72e585ca8fa3...	2019-04-13 00:00:00+00:00	2019-04-13 00:15:00+00:00	840	3.0	NaN	NaN	NaN	NaN	...	0.0	13.50	Credit Card	Choice Taxi Association	NaN	NaN	None	NaN	NaN	None
+2	98dee200dc70739fa746c271cf3294aa25caa516	0ec0b176586a8986d42e5c32220e1ecd8e529d02e32925...	2019-04-13 00:00:00+00:00	2019-04-13 00:00:00+00:00	480	0.0	NaN	NaN	NaN	NaN	...	0.0	8.76	Credit Card	Star North Management LLC	NaN	NaN	None	NaN	NaN	None
+3	391ecb2d3c373fd2d48eb24103c5c83a963ee733	515dbaaba624daeb95c3dfefb93bfc1764b99ed2ff96b7...	2019-04-13 00:00:00+00:00	2019-04-13 00:00:00+00:00	360	0.0	NaN	NaN	NaN	NaN	...	1.0	10.25	Credit Card	Taxi Affiliation Services	NaN	NaN	None	NaN	NaN	None
+4	84afc34511d3d73230c836d865d235cb25d9da7f	4e52e33e251a85225aa90043167cc14fe93e169568e682...	2019-04-13 00:00:00+00:00	2019-04-13 00:00:00+00:00	240	0.8	NaN	1.703108e+10	NaN	8.0	...	1.0	6.25	No Charge	Star North Management LLC	NaN	NaN	None	41.899156	-87.626211	POINT (-87.6262105324 41.8991556134)
+5 rows × 23 columns
+"""
+
+# 1) How can you predict the demand for taxis?
+# Say you work for a taxi company, and you're interested in predicting the demand for taxis. Towards this goal, you'd like to create a plot that shows a rolling average of the daily number of taxi trips. Amend the (partial) query below to return a DataFrame with two columns:
+# 	trip_date - contains one entry for each date from January 1, 2016, to March 31, 2016.
+#	avg_num_trips - shows the average number of daily trips, calculated over a window including the value for the current date, along with the values for the preceding 3 days and the following 3 days, as long as the days fit within the three-month time frame. For instance, when calculating the value in this column for January 3, 2016, the window will include the number of trips for the preceding 2 days, the current date, and the following 3 days.
+# This query is partially completed for you, and you need only write the part that calculates the avg_num_trips column. Note that this query uses a common table expression (CTE); if you need to review how to use CTEs, you're encouraged to check out this tutorial in the Intro to SQL course.
+
+# Fill in the blank below
+avg_num_trips_query = """
+                      WITH trips_by_day AS
+                      (
+                      SELECT DATE(trip_start_timestamp) AS trip_date,
+                          COUNT(*) as num_trips
+                      FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+                      WHERE trip_start_timestamp > '2016-01-01' AND trip_start_timestamp < '2016-04-01'
+                      GROUP BY trip_date
+                      ORDER BY trip_date
+                      )
+                      SELECT trip_date,
+                          AVG(num_trips)
+                          OVER (
+                               ORDER BY trip_date
+                               ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING
+                               ) AS avg_num_trips
+                      FROM trips_by_day
+                      """
+
+# Check your answer
+q_1.check()
+
+"""
+trip_date	avg_num_trips
+0	2016-01-30	80749.857143
+1	2016-03-28	78639.428571
+2	2016-02-21	89790.714286
+3	2016-03-23	88152.714286
+4	2016-01-09	79842.000000
+"""
+
+# 2) Can you separate and order trips by community area?
+# The query below returns a DataFrame with three columns from the table: pickup_community_area, trip_start_timestamp, and trip_end_timestamp.
+# Amend the query to return an additional column called trip_number which shows the order in which the trips were taken from their respective community areas. So, the first trip of the day originating from community area 1 should receive a value of 1; the second trip of the day from the same area should receive a value of 2. Likewise, the first trip of the day from community area 2 should receive a value of 1, and so on.
+# Note that there are many numbering functions that can be used to solve this problem (depending on how you want to deal with trips that started at the same time from the same community area); to answer this question, please use the RANK() function.
+
+# Amend the query below
+
+# trip_number_query = """
+#                     SELECT pickup_community_area,
+#                         trip_start_timestamp,
+#                         trip_end_timestamp
+#                     FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+#                     WHERE DATE(trip_start_timestamp) = '2013-10-03'
+#                     """
+
+trip_number_query = """
+                    SELECT pickup_community_area,
+                        trip_start_timestamp,
+                        trip_end_timestamp,
+                        RANK()
+                            OVER (
+                                  PARTITION BY pickup_community_area
+                                  ORDER BY trip_start_timestamp
+                                 ) AS trip_number
+                    FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+                    WHERE DATE(trip_start_timestamp) = '2013-10-03' 
+                    """
+
+trip_number_result = client.query(trip_number_query).result().to_dataframe()
+# Check your answer
+q_2.check()
+
+"""
+	pickup_community_area	trip_start_timestamp	trip_end_timestamp	trip_number
+0	24.0	2013-10-03 00:00:00+00:00	2013-10-03 00:00:00+00:00	1
+1	24.0	2013-10-03 00:00:00+00:00	2013-10-03 00:00:00+00:00	1
+2	24.0	2013-10-03 00:00:00+00:00	2013-10-03 00:00:00+00:00	1
+3	24.0	2013-10-03 00:00:00+00:00	2013-10-03 00:00:00+00:00	1
+4	24.0	2013-10-03 00:00:00+00:00	2013-10-03 00:00:00+00:00	1
+Correct
+"""
+
+# Fill in the blanks below
+break_time_query = """
+                   SELECT taxi_id,
+                       trip_start_timestamp,
+                       trip_end_timestamp,
+                       TIMESTAMP_DIFF(
+                           trip_start_timestamp, 
+                           LAG(trip_end_timestamp, 1) 
+                               OVER (
+                                    PARTITION BY taxi_id 
+                                    ORDER BY trip_start_timestamp), 
+                           MINUTE) as prev_break
+                   FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+                   WHERE DATE(trip_start_timestamp) = '2013-10-03' 
+                   """
+
+# Check your answer
+q_3.check()
+
+"""
+taxi_id	trip_start_timestamp	trip_end_timestamp	prev_break
+0	001330b81e23412049f9c3eff5b6e972a91afe59c9aa36...	2013-10-03 17:45:00+00:00	2013-10-03 17:45:00+00:00	-60.0
+1	0304163722b8dc5022e85cffef32025187082e7d118848...	2013-10-03 21:45:00+00:00	2013-10-03 21:30:00+00:00	165.0
+2	1a9f0188874ee240e95f2713388e0ee930b07996909b35...	2013-10-03 17:45:00+00:00	2013-10-03 17:45:00+00:00	1035.0
+3	1ffbf53dc521eb3df9f4ec51b9e2c75882ec5d78a6f3d6...	2013-10-03 18:15:00+00:00	2013-10-03 18:15:00+00:00	495.0
+4	3183528d2ee2b082ce5ac1fa8af0f5675c9ac4958ed383...	2013-10-03 05:30:00+00:00	2013-10-03 05:30:00+00:00	255.0
+Correct
+"""
+
