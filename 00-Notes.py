@@ -2356,3 +2356,57 @@ client.list_rows(languages_table, max_results=5).to_dataframe()
 # Print information on all the columns in the table
 languages_table.schema
 
+"""
+[SchemaField('repo_name', 'STRING', 'NULLABLE', None, (), None),
+ SchemaField('language', 'RECORD', 'REPEATED', None, (
+ 	SchemaField('name', 'STRING', 'NULLABLE', None, (), None),
+ 	SchemaField('bytes', 'INTEGER', 'NULLABLE', None, (), None)
+  ), None)]
+ """
+
+# Assume for the moment that you have access to a table called sample_languages that contains only a very small subset of the rows from the languages table: in fact, it contains only three rows! This table is depicted in the image below.
+
+# 3) What's the most popular programming language?
+# Write a query to leverage the information in the languages table to determine which programming languages appear in the most repositories. The table returned by your query should have two columns:
+#	language_name - the name of the programming language
+#	num_repos - the number of repositories in the languages table that use the programming language
+# Sort the table so that languages that appear in more repos are shown first.
+
+pop_lang_query = """
+                 SELECT l.name as language_name, COUNT(*) as num_repos
+                 FROM `bigquery-public-data.github_repos.languages`,
+                     UNNEST(language) AS l
+                 GROUP BY language_name
+                 ORDER BY num_repos DESC
+                 """
+
+"""
+	language_name	num_repos
+0	JavaScript	1099966
+1	CSS	807826
+2	HTML	777433
+3	Shell	640886
+4	Python	550905
+Correct
+"""
+
+# 4) Which languages are used in the repository with the most languages?
+# For this question, you'll restrict your attention to the repository with name 'polyrabbit/polyglot'.
+
+# Write a query that returns a table with one row for each language in this repository. The table should have two columns:
+
+# 	name - the name of the programming language
+# 	bytes - the total number of bytes of that programming language
+# Sort the table by the bytes column so that programming languages that take up more space in the repo appear first.
+
+
+
+"""
+	name	bytes
+0	Lasso	834726
+1	C	819142
+2	Mercury	709952
+3	Objective-C	495392
+4	Game Maker Language	298131
+Correct
+"""
