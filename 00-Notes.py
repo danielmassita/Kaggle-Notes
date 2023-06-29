@@ -2410,3 +2410,79 @@ Correct
 4	Game Maker Language	298131
 Correct
 """
+
+
+
+
+
+# |----- Theory 10 -----|
+
+# Some useful functions
+# We will use two functions to compare the efficiency of different queries:
+
+#	show_amount_of_data_scanned() shows the amount of data the query uses.
+#	show_time_to_run() prints how long it takes for the query to execute.
+
+from google.cloud import bigquery
+from time import time
+
+client = bigquery.Client()
+
+def show_amount_of_data_scanned(query):
+    # dry_run lets us see how much data the query uses without running it
+    dry_run_config = bigquery.QueryJobConfig(dry_run=True)
+    query_job = client.query(query, job_config=dry_run_config)
+    print('Data processed: {} GB'.format(round(query_job.total_bytes_processed / 10**9, 3)))
+    
+def show_time_to_run(query):
+    time_config = bigquery.QueryJobConfig(use_query_cache=False)
+    start = time()
+    query_result = client.query(query, job_config=time_config).result()
+    end = time()
+    print('Time to run: {} seconds'.format(round(end-start, 3)))
+
+# 1) Only select the columns you want.
+# It is tempting to start queries with SELECT * FROM .... It's convenient because you don't need to think about which columns you need. But it can be very inefficient.
+# This is especially important if there are text fields that you don't need, because text fields tend to be larger than other fields.
+
+star_query = "SELECT * FROM `bigquery-public-data.github_repos.contents`"
+show_amount_of_data_scanned(star_query)
+
+basic_query = "SELECT size, binary FROM `bigquery-public-data.github_repos.contents`"
+show_amount_of_data_scanned(basic_query)
+
+"""
+Data processed: 2682.118 GB
+Data processed: 2.531 GB
+"""
+# In this case, we see a 1000X reduction in data being scanned to complete the query, because the raw data contained a text field that was 1000X larger than the fields we might need.
+
+
+# 2) Read less data.
+# Both queries below calculate the average duration (in seconds) of one-way bike trips in the city of San Francisco.
+
+more_data_query = """
+                  SELECT MIN(start_station_name) AS start_station_name,
+                      MIN(end_station_name) AS end_station_name,
+                      AVG(duration_sec) AS avg_duration_sec
+                  FROM `bigquery-public-data.san_francisco.bikeshare_trips`
+                  WHERE start_station_id != end_station_id 
+                  GROUP BY start_station_id, end_station_id
+                  LIMIT 10
+                  """
+show_amount_of_data_scanned(more_data_query)
+# Data processed: 0.076 GB
+
+less_data_query = """
+                  SELECT start_station_name,
+                      end_station_name,
+                      AVG(duration_sec) AS avg_duration_sec                  
+                  FROM `bigquery-public-data.san_francisco.bikeshare_trips`
+                  WHERE start_station_name != end_station_name
+                  GROUP BY start_station_name, end_station_name
+                  LIMIT 10
+                  """
+show_amount_of_data_scanned(less_data_query)
+# Data processed: 0.06 GB
+
+
